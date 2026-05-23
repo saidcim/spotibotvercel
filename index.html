@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎵 Spotify AI Bot Dashboard</title>
+  <style>
+    :root {
+      --green: #1DB954;
+      --green-dark: #158a3e;
+      --green-glow: rgba(29,185,84,0.15);
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #ffffff;
+      --text2: #a0a0a0;
+      --text3: #606060;
+      --red: #e05555;
+      --yellow: #f5a623;
+      --blue: #4a9eff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* Header */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo { font-size: 22px; }
+    .header h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
+    .header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--text3); display: inline-block;
+      transition: background 0.3s;
+    }
+    .status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+    .status-dot.running { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); animation: pulse 0.8s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+    /* Setup banner */
+    #setup-banner {
+      background: linear-gradient(135deg, #1a1200, #1a0a00);
+      border: 1px solid #f5a62344;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 2rem;
+    }
+    #setup-banner h3 { color: var(--yellow); margin-bottom: 0.75rem; font-size: 14px; }
+    .setup-form { display: flex; flex-direction: column; gap: 10px; }
+    .setup-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .setup-form input {
+      flex: 1; min-width: 200px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px;
+      color: var(--text); font-size: 13px; outline: none;
+    }
+    .setup-form input:focus { border-color: var(--green); }
+    .btn {
+      padding: 10px 20px; border-radius: 8px; border: none;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .btn-green { background: var(--green); color: #000; }
+    .btn-green:hover { background: #1ed760; transform: translateY(-1px); }
+    .btn-green:disabled { background: var(--text3); cursor: not-allowed; transform: none; }
+    .btn-outline {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--green); color: var(--green); }
+
+    /* Main layout */
+    .main { padding: 1.5rem 2rem; max-width: 1100px; margin: 0 auto; }
+
+    /* Cards grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem;
+    }
+    .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+    .stat-value { font-size: 26px; font-weight: 700; letter-spacing: -1px; color: var(--green); }
+    .stat-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+    /* Trigger button */
+    .trigger-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .trigger-info h3 { font-size: 15px; margin-bottom: 4px; }
+    .trigger-info p { font-size: 13px; color: var(--text2); }
+    #trigger-btn {
+      padding: 12px 28px;
+      font-size: 14px;
+      min-width: 180px;
+    }
+    .trigger-result {
+      font-size: 13px; margin-top: 8px; padding: 8px 12px;
+      border-radius: 8px; display: none;
+    }
+    .trigger-result.success { background: var(--green-glow); color: var(--green); border: 1px solid #1DB95430; }
+    .trigger-result.error { background: rgba(224,85,85,0.1); color: var(--red); border: 1px solid #e0555530; }
+
+    /* Two column layout */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-header h3 { font-size: 14px; font-weight: 600; }
+    .panel-body { padding: 1rem 1.2rem; }
+
+    /* Mood history */
+    .mood-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; }
+    .mood-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .mood-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .mood-emoji { font-size: 22px; }
+    .mood-name { font-size: 14px; font-weight: 600; }
+    .mood-date { font-size: 11px; color: var(--text3); margin-left: auto; }
+    .mood-summary { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 6px; }
+    .mood-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .mood-tag {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 11px; color: var(--text2);
+    }
+    .mood-tag.green { border-color: var(--green); color: var(--green); }
+    .energy-badge {
+      padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .energy-badge.düşük { background: rgba(74,158,255,0.15); color: var(--blue); }
+    .energy-badge.orta { background: rgba(245,166,35,0.15); color: var(--yellow); }
+    .energy-badge.yüksek { background: rgba(29,185,84,0.15); color: var(--green); }
+
+    /* Feedback history */
+    .feedback-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; }
+    .feedback-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .feedback-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .cycle-badge {
+      background: var(--green-glow); color: var(--green);
+      border: 1px solid #1DB95430;
+      border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700;
+    }
+    .score-bar-wrap { flex: 1; background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+    .score-bar { height: 100%; border-radius: 4px; background: var(--green); transition: width 0.6s; }
+    .score-num { font-size: 12px; font-weight: 700; color: var(--green); min-width: 30px; text-align: right; }
+    .feedback-analysis { font-size: 12px; color: var(--text2); line-height: 1.5; }
+    .feedback-plays { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+    /* Empty state */
+    .empty {
+      text-align: center; padding: 2rem 1rem;
+      color: var(--text3); font-size: 13px;
+    }
+    .empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 2rem; color: var(--text3); font-size: 13px; }
+    .spinner {
+      width: 20px; height: 20px; border: 2px solid var(--border);
+      border-top-color: var(--green); border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin: 0 auto 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Playlist link */
+    .playlist-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--green); font-size: 13px; text-decoration: none;
+      padding: 6px 12px; border: 1px solid #1DB95430;
+      border-radius: 20px; transition: all 0.15s;
+    }
+    .playlist-link:hover { background: var(--green-glow); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo">🎵</span>
+    <div>
+      <h1>Spotify AI Bot</h1>
+      <div class="header-sub">AI destekli dinamik playlist yöneticisi</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span class="status-dot" id="status-dot"></span>
+    <span style="font-size:12px;color:var(--text2)" id="status-text">Bağlanıyor...</span>
+  </div>
+</div>
+
+<!-- Setup Banner (gizli kalır, config kaydedilince) -->
+<div id="setup-banner">
+  <h3>⚙️ Bot Bağlantısını Ayarla</h3>
+  <div class="setup-form">
+    <div class="setup-row">
+      <input type="url" id="bot-url" placeholder="Railway Bot URL'si  (örn: https://xyz.railway.app)" />
+      <input type="password" id="api-secret" placeholder="API_SECRET değerin" />
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-green" onclick="saveConfig()">Bağlan</button>
+      <span id="connect-msg" style="font-size:12px;color:var(--text2)"></span>
+    </div>
+  </div>
+</div>
+
+<div class="main" id="main-content" style="display:none">
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Toplam Döngü</div>
+      <div class="stat-value" id="stat-cycle">—</div>
+      <div class="stat-sub">güncelleme</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Son Güncelleme</div>
+      <div class="stat-value" id="stat-last" style="font-size:15px;margin-top:4px">—</div>
+      <div class="stat-sub" id="stat-last-relative">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Güncel Ruh Hali</div>
+      <div class="stat-value" id="stat-mood" style="font-size:20px;margin-top:4px">—</div>
+      <div class="stat-sub" id="stat-energy">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Son Playlist Skoru</div>
+      <div class="stat-value" id="stat-score">—</div>
+      <div class="stat-sub">/ 10</div>
+    </div>
+  </div>
+
+  <!-- Trigger -->
+  <div class="trigger-section">
+    <div class="trigger-info">
+      <h3>🔄 Manuel Güncelleme</h3>
+      <p>3 gün beklemeden playlist'i hemen yenile. Bot dinleme geçmişini analiz edip yeni şarkılar seçer.</p>
+      <div class="trigger-result" id="trigger-result"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+      <button class="btn btn-green" id="trigger-btn" onclick="triggerCycle()">
+        ▶ Şimdi Güncelle
+      </button>
+      <a href="#" id="playlist-link" class="playlist-link" target="_blank" style="display:none">
+        🎵 Playlist'i Aç
+      </a>
+    </div>
+  </div>
+
+  <!-- Mood + Feedback -->
+  <div class="two-col">
+    <!-- Ruh Hali Geçmişi -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3>😌 Ruh Hali Geçmişi</h3>
+        <span style="font-size:11px;color:var(--text3)">Son 3 günlük dinleme analizi</span>
+      </div>
+      <div class="panel-body">
+        <div class="mood-list" id="mood-list">
+          <div class="loading"><div class="spinner"></div>Yükleniyor...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Playlist Feedback -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3>📊 Playlist Geçmişi</h3>
+        <span style="font-size:11px;color:var(--text3)">AI skor & analiz</span>
+      </div>
+      <div class="panel-body">
+        <div class="feedback-list" id="feedback-list">
+          <div class="loading"><div class="spinner"></div>Yükleniyor...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let BOT_URL = '';
+  let API_SECRET = '';
+  let refreshTimer = null;
+
+  // Config yükle
+  function loadConfig() {
+    BOT_URL = localStorage.getItem('bot_url') || '';
+    API_SECRET = localStorage.getItem('api_secret') || '';
+    if (BOT_URL && API_SECRET) {
+      document.getElementById('setup-banner').style.display = 'none';
+      document.getElementById('main-content').style.display = 'block';
+      document.getElementById('bot-url').value = BOT_URL;
+      document.getElementById('api-secret').value = API_SECRET;
+      fetchStatus();
+      refreshTimer = setInterval(fetchStatus, 30000);
+    }
+  }
+
+  function saveConfig() {
+    const url = document.getElementById('bot-url').value.trim().replace(/\/$/, '');
+    const secret = document.getElementById('api-secret').value.trim();
+    if (!url || !secret) { alert('Her iki alanı da doldur.'); return; }
+    BOT_URL = url;
+    API_SECRET = secret;
+    localStorage.setItem('bot_url', url);
+    localStorage.setItem('api_secret', secret);
+    document.getElementById('connect-msg').textContent = 'Bağlanıyor...';
+    document.getElementById('setup-banner').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    fetchStatus();
+    if (refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(fetchStatus, 30000);
+  }
+
+  async function fetchStatus() {
+    const dot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    try {
+      const res = await fetch(`${BOT_URL}/status`, {
+        headers: { 'X-API-Secret': API_SECRET }
+      });
+      if (!res.ok) throw new Error('Auth hatası');
+      const data = await res.json();
+      renderStatus(data);
+      dot.className = data.is_running ? 'status-dot running' : 'status-dot online';
+      statusText.textContent = data.is_running ? 'Güncelleniyor...' : 'Çevrimiçi';
+    } catch (e) {
+      dot.className = 'status-dot';
+      statusText.textContent = 'Bağlantı hatası';
+      console.error(e);
+    }
+  }
+
+  function renderStatus(data) {
+    // Stats
+    document.getElementById('stat-cycle').textContent = data.cycle || 0;
+
+    if (data.last_update) {
+      const d = new Date(data.last_update);
+      document.getElementById('stat-last').textContent = d.toLocaleDateString('tr-TR', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      document.getElementById('stat-last-relative').textContent = timeAgo(d);
+    }
+
+    // Son ruh hali
+    const moods = data.mood_history || [];
+    if (moods.length > 0) {
+      const last = moods[moods.length - 1];
+      document.getElementById('stat-mood').textContent = `${last.mood_emoji || ''} ${last.mood || '—'}`;
+      document.getElementById('stat-energy').textContent = `Enerji: ${last.energy_level || '—'}`;
+    }
+
+    // Son skor
+    const feedbacks = data.feedback_history || [];
+    if (feedbacks.length > 0) {
+      const last = feedbacks[feedbacks.length - 1];
+      document.getElementById('stat-score').textContent = last.score?.toFixed(1) || '—';
+    }
+
+    // Playlist linki
+    if (data.playlist_id) {
+      const link = document.getElementById('playlist-link');
+      link.href = `https://open.spotify.com/playlist/${data.playlist_id}`;
+      link.style.display = 'inline-flex';
+    }
+
+    // Ruh hali geçmişi
+    renderMoodHistory(moods.slice().reverse());
+
+    // Feedback geçmişi
+    renderFeedbackHistory(feedbacks.slice().reverse());
+  }
+
+  function renderMoodHistory(moods) {
+    const el = document.getElementById('mood-list');
+    if (!moods.length) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">😶</div>Henüz ruh hali verisi yok.<br>İlk döngü tamamlandıktan sonra burada görünecek.</div>`;
+      return;
+    }
+    el.innerHTML = moods.map(m => `
+      <div class="mood-item">
+        <div class="mood-top">
+          <span class="mood-emoji">${m.mood_emoji || '🎵'}</span>
+          <span class="mood-name">${m.mood || '—'}</span>
+          <span class="energy-badge ${m.energy_level || 'orta'}">${m.energy_level || 'orta'}</span>
+          <span class="mood-date">${formatDate(m.date)} · ${m.trigger || 'Otomatik'}</span>
+        </div>
+        <div class="mood-summary">${m.summary || ''}</div>
+        <div class="mood-tags">
+          ${(m.dominant_genres || []).map(g => `<span class="mood-tag">${g}</span>`).join('')}
+          ${(m.top_artists_this_period || []).map(a => `<span class="mood-tag green">${a}</span>`).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderFeedbackHistory(feedbacks) {
+    const el = document.getElementById('feedback-list');
+    if (!feedbacks.length) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">📭</div>Henüz playlist geçmişi yok.<br>İlk güncelleme sonrası burada görünecek.</div>`;
+      return;
+    }
+    el.innerHTML = feedbacks.map(f => `
+      <div class="feedback-item">
+        <div class="feedback-top">
+          <span class="cycle-badge">#${f.cycle}</span>
+          <div class="score-bar-wrap">
+            <div class="score-bar" style="width:${(f.score/10)*100}%"></div>
+          </div>
+          <span class="score-num">${f.score?.toFixed(1)}</span>
+        </div>
+        <div class="feedback-analysis">${f.analysis || '—'}</div>
+        <div class="feedback-plays">Ort. çalma: ${f.avg_plays?.toFixed(1) || 0} · ${formatDate(f.date)}</div>
+      </div>
+    `).join('');
+  }
+
+  async function triggerCycle() {
+    const btn = document.getElementById('trigger-btn');
+    const result = document.getElementById('trigger-result');
+    btn.disabled = true;
+    btn.textContent = '⏳ Başlatılıyor...';
+    result.style.display = 'none';
+
+    try {
+      const res = await fetch(`${BOT_URL}/trigger`, {
+        method: 'POST',
+        headers: { 'X-API-Secret': API_SECRET }
+      });
+      const data = await res.json();
+      if (res.status === 409) {
+        result.className = 'trigger-result error';
+        result.textContent = '⚠️ Bot zaten çalışıyor, lütfen bekle.';
+      } else if (res.ok) {
+        result.className = 'trigger-result success';
+        result.textContent = '✅ Döngü başlatıldı! Birkaç dakika içinde playlist güncellenecek.';
+        setTimeout(fetchStatus, 5000);
+        setTimeout(fetchStatus, 15000);
+        setTimeout(fetchStatus, 30000);
+      } else {
+        throw new Error(data.message || 'Hata');
+      }
+    } catch (e) {
+      result.className = 'trigger-result error';
+      result.textContent = `❌ Hata: ${e.message}`;
+    }
+
+    result.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '▶ Şimdi Güncelle';
+  }
+
+  function timeAgo(date) {
+    const diff = Math.floor((Date.now() - date) / 1000);
+    if (diff < 60) return 'Az önce';
+    if (diff < 3600) return `${Math.floor(diff/60)} dakika önce`;
+    if (diff < 86400) return `${Math.floor(diff/3600)} saat önce`;
+    return `${Math.floor(diff/86400)} gün önce`;
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('tr-TR', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  }
+
+  loadConfig();
+</script>
+</body>
+</html>
