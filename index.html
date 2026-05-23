@@ -341,16 +341,12 @@
 
   // Config yükle
   function loadConfig() {
-    BOT_URL = localStorage.getItem('bot_url') || '';
-    API_SECRET = localStorage.getItem('api_secret') || '';
-    if (BOT_URL && API_SECRET) {
-      document.getElementById('setup-banner').style.display = 'none';
-      document.getElementById('main-content').style.display = 'block';
-      document.getElementById('bot-url').value = BOT_URL;
-      document.getElementById('api-secret').value = API_SECRET;
-      fetchStatus();
-      refreshTimer = setInterval(fetchStatus, 30000);
-    }
+    BOT_URL = 'https://spotibot-production-67bb.up.railway.app';
+    API_SECRET = 'said';
+    document.getElementById('setup-banner').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    fetchStatus();
+    refreshTimer = setInterval(fetchStatus, 30000);
   }
 
   function saveConfig() {
