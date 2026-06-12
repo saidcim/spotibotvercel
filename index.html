@@ -283,7 +283,7 @@
   <div class="setup-form">
     <div class="setup-row">
       <input type="url" id="bot-url" placeholder="Railway Bot URL'si  (örn: https://xyz.railway.app)" />
-      <input type="password" id="api-secret" placeholder="API_SECRET değerin" />
+      <input type="password" id="api-secret" placeholder="said" />
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <button class="btn btn-green" onclick="saveConfig()">Bağlan</button>
@@ -426,6 +426,11 @@
     const savedSecret = localStorage.getItem('api_secret');
     BOT_URL = savedUrl || 'https://spotibot-production-67bb.up.railway.app';
     API_SECRET = savedSecret || 'said';
+    if (savedUrl && isLikelyFrontendUrl(savedUrl)) {
+      localStorage.removeItem('bot_url');
+      BOT_URL = 'https://spotibot-production-67bb.up.railway.app';
+      document.getElementById('setup-banner').style.display = 'block';
+    }
 
     // #region agent log
     dbgLog('index.html:loadConfig', 'config loaded', {
@@ -452,10 +457,23 @@
     }
   }
 
+  function isLikelyFrontendUrl(url) {
+    try {
+      const u = new URL(url);
+      if (u.origin === window.location.origin) return true;
+      if (u.hostname.includes('vercel.app')) return true;
+    } catch { return false; }
+    return false;
+  }
+
   function saveConfig() {
     const url = document.getElementById('bot-url').value.trim().replace(/\/$/, '');
     const secret = document.getElementById('api-secret').value.trim();
     if (!url || !secret) { alert('Her iki alanı da doldur.'); return; }
+    if (isLikelyFrontendUrl(url)) {
+      alert('Bu Vercel (dashboard) adresi. Railway bot URL\'sini gir (örn: https://xxx.up.railway.app)');
+      return;
+    }
     BOT_URL = url;
     API_SECRET = secret;
     localStorage.setItem('bot_url', url);
@@ -491,7 +509,19 @@
       }, res.status === 401 ? 'C' : res.ok ? 'OK' : 'D');
       // #endregion
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      const raw = await res.text();
+      // #region agent log
+      dbgLog('index.html:fetchStatus', 'response body peek', {
+        contentType,
+        startsWithHtml: raw.trimStart().startsWith('<'),
+        bodyPrefix: raw.substring(0, 40)
+      }, 'A');
+      // #endregion
+      if (contentType.includes('text/html') || raw.trimStart().startsWith('<!DOCTYPE') || raw.trimStart().startsWith('<html')) {
+        throw new Error('HTML_YANIT — Railway bot URL\'si gerekli, Vercel adresi değil');
+      }
+      const data = JSON.parse(raw);
       renderStatus(data);
       dot.className = data.is_running ? 'status-dot running' : 'status-dot online';
       statusText.textContent = data.is_running ? 'Güncelleniyor...' : 'Çevrimiçi';
@@ -499,8 +529,13 @@
       dot.className = 'status-dot';
       const errMsg = e && e.message ? e.message : String(e);
       const isAuth = errMsg.includes('401');
+      const isHtml = errMsg.includes('HTML_YANIT') || errMsg.includes('<!DOCTYPE');
       const isNetwork = e instanceof TypeError || errMsg.includes('Failed to fetch');
-      statusText.textContent = isAuth ? 'Yetki hatası (API_SECRET)' : isNetwork ? 'Bağlantı hatası (ağ/CORS)' : `Hata: ${errMsg}`;
+      statusText.textContent = isHtml
+        ? 'Yanlış URL — Railway bot adresini girin'
+        : isAuth ? 'Yetki hatası (API_SECRET)'
+        : isNetwork ? 'Bağlantı hatası (ağ/CORS)'
+        : `Hata: ${errMsg}`;
       // #region agent log
       dbgLog('index.html:fetchStatus', 'request failed', {
         errorName: e && e.name,
