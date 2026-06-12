@@ -3,519 +3,496 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎵 Spotify AI Bot Dashboard</title>
+  <title>SpotiBot — Vinyl</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --green: #1DB954;
-      --green-dark: #158a3e;
-      --green-glow: rgba(29,185,84,0.15);
-      --bg: #0a0a0a;
-      --surface: #141414;
-      --surface2: #1a1a1a;
-      --border: #2a2a2a;
-      --text: #ffffff;
-      --text2: #a0a0a0;
-      --text3: #606060;
-      --red: #e05555;
-      --yellow: #f5a623;
-      --blue: #4a9eff;
+      --bg:        #0d0e14;
+      --surface:   #13141d;
+      --surface2:  #1a1b27;
+      --border:    #252637;
+      --amber:     #f5c842;
+      --amber-dim: rgba(245,200,66,0.12);
+      --amber-glow:rgba(245,200,66,0.06);
+      --text:      #e8e9f0;
+      --text2:     #8889a0;
+      --text3:     #44455a;
+      --green:     #4ade80;
+      --red:       #f87171;
+      --blue:      #60a5fa;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 0;
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:'Space Grotesk',sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
     }
-
-    /* Header */
-    .header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
+ 
+    /* ── Sidebar ── */
+    .layout{display:flex;min-height:100vh;}
+    .sidebar{
+      width:220px;flex-shrink:0;
+      background:var(--surface);
+      border-right:1px solid var(--border);
+      display:flex;flex-direction:column;
+      padding:28px 0;
+      position:sticky;top:0;height:100vh;
     }
-    .header-left { display: flex; align-items: center; gap: 12px; }
-    .logo { font-size: 22px; }
-    .header h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
-    .header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--text3); display: inline-block;
-      transition: background 0.3s;
+    .sidebar-logo{
+      padding:0 24px 28px;
+      border-bottom:1px solid var(--border);
     }
-    .status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
-    .status-dot.running { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); animation: pulse 0.8s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-
-    /* Setup banner */
-    #setup-banner {
-      background: linear-gradient(135deg, #1a1200, #1a0a00);
-      border: 1px solid #f5a62344;
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin: 1.5rem 2rem;
+    .sidebar-logo .wordmark{
+      font-family:'Space Mono',monospace;
+      font-size:13px;font-weight:700;letter-spacing:2px;
+      color:var(--amber);text-transform:uppercase;
     }
-    #setup-banner h3 { color: var(--yellow); margin-bottom: 0.75rem; font-size: 14px; }
-    .setup-form { display: flex; flex-direction: column; gap: 10px; }
-    .setup-row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .setup-form input {
-      flex: 1; min-width: 200px;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px 14px;
-      color: var(--text); font-size: 13px; outline: none;
+    .sidebar-logo .tagline{
+      font-size:11px;color:var(--text3);margin-top:4px;letter-spacing:0.3px;
     }
-    .setup-form input:focus { border-color: var(--green); }
-    .btn {
-      padding: 10px 20px; border-radius: 8px; border: none;
-      font-size: 13px; font-weight: 600; cursor: pointer;
-      transition: all 0.15s; white-space: nowrap;
+    .sidebar-nav{padding:20px 12px;flex:1;}
+    .nav-item{
+      display:flex;align-items:center;gap:10px;
+      padding:9px 12px;border-radius:8px;
+      font-size:13px;color:var(--text2);cursor:pointer;
+      transition:all 0.15s;margin-bottom:2px;
     }
-    .btn-green { background: var(--green); color: #000; }
-    .btn-green:hover { background: #1ed760; transform: translateY(-1px); }
-    .btn-green:disabled { background: var(--text3); cursor: not-allowed; transform: none; }
-    .btn-outline {
-      background: transparent; color: var(--text);
-      border: 1px solid var(--border);
+    .nav-item:hover{background:var(--surface2);color:var(--text);}
+    .nav-item.active{background:var(--amber-dim);color:var(--amber);}
+    .nav-icon{font-size:15px;width:18px;text-align:center;}
+ 
+    .sidebar-status{
+      padding:16px 20px;
+      border-top:1px solid var(--border);
     }
-    .btn-outline:hover { border-color: var(--green); color: var(--green); }
-
-    /* Main layout */
-    .main { padding: 1.5rem 2rem; max-width: 1100px; margin: 0 auto; }
-
-    /* Cards grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 1.5rem;
+    .status-row{display:flex;align-items:center;gap:8px;}
+    .dot{
+      width:7px;height:7px;border-radius:50%;
+      background:var(--text3);flex-shrink:0;
     }
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.2rem;
+    .dot.online{background:var(--green);box-shadow:0 0 6px var(--green);}
+    .dot.running{background:var(--amber);box-shadow:0 0 6px var(--amber);animation:blink 0.9s infinite;}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+    .status-label{font-size:12px;color:var(--text2);}
+ 
+    /* ── Main ── */
+    .main{flex:1;padding:36px 40px;overflow-y:auto;}
+ 
+    /* ── Hero cycle counter ── */
+    .hero{
+      display:flex;align-items:flex-end;justify-content:space-between;
+      margin-bottom:36px;gap:20px;flex-wrap:wrap;
     }
-    .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
-    .stat-value { font-size: 26px; font-weight: 700; letter-spacing: -1px; color: var(--green); }
-    .stat-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
-
-    /* Trigger button */
-    .trigger-section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
+    .hero-left{}
+    .hero-eyebrow{
+      font-size:11px;letter-spacing:2px;text-transform:uppercase;
+      color:var(--text3);margin-bottom:10px;font-family:'Space Mono',monospace;
     }
-    .trigger-info h3 { font-size: 15px; margin-bottom: 4px; }
-    .trigger-info p { font-size: 13px; color: var(--text2); }
-    #trigger-btn {
-      padding: 12px 28px;
-      font-size: 14px;
-      min-width: 180px;
+    .hero-number{
+      font-family:'Space Mono',monospace;
+      font-size:88px;line-height:1;font-weight:700;
+      color:var(--amber);letter-spacing:-4px;
     }
-    .trigger-result {
-      font-size: 13px; margin-top: 8px; padding: 8px 12px;
-      border-radius: 8px; display: none;
+    .hero-label{font-size:16px;color:var(--text2);margin-top:6px;}
+ 
+    .hero-mood{
+      text-align:right;
     }
-    .trigger-result.success { background: var(--green-glow); color: var(--green); border: 1px solid #1DB95430; }
-    .trigger-result.error { background: rgba(224,85,85,0.1); color: var(--red); border: 1px solid #e0555530; }
-
-    /* Two column layout */
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-    @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
+    .mood-big-emoji{font-size:52px;line-height:1;}
+    .mood-big-name{
+      font-size:22px;font-weight:600;margin-top:8px;color:var(--text);
     }
-    .panel-header {
-      padding: 1rem 1.2rem;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
+    .mood-energy-tag{
+      display:inline-block;margin-top:6px;
+      font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+      font-family:'Space Mono',monospace;
+      padding:3px 10px;border-radius:4px;
+      background:var(--amber-dim);color:var(--amber);
     }
-    .panel-header h3 { font-size: 14px; font-weight: 600; }
-    .panel-body { padding: 1rem 1.2rem; }
-
-    /* Mood history */
-    .mood-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; }
-    .mood-item {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
+ 
+    /* ── Divider ── */
+    .divider{height:1px;background:var(--border);margin:0 0 32px;}
+ 
+    /* ── Stats row ── */
+    .stats-row{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+      margin-bottom:32px;
     }
-    .mood-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .mood-emoji { font-size: 22px; }
-    .mood-name { font-size: 14px; font-weight: 600; }
-    .mood-date { font-size: 11px; color: var(--text3); margin-left: auto; }
-    .mood-summary { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 6px; }
-    .mood-tags { display: flex; flex-wrap: wrap; gap: 4px; }
-    .mood-tag {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 2px 8px;
-      font-size: 11px; color: var(--text2);
+    .stat{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:12px;padding:20px;
     }
-    .mood-tag.green { border-color: var(--green); color: var(--green); }
-    .energy-badge {
-      padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    .stat-k{
+      font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+      color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px;
     }
-    .energy-badge.düşük { background: rgba(74,158,255,0.15); color: var(--blue); }
-    .energy-badge.orta { background: rgba(245,166,35,0.15); color: var(--yellow); }
-    .energy-badge.yüksek { background: rgba(29,185,84,0.15); color: var(--green); }
-
-    /* Feedback history */
-    .feedback-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; }
-    .feedback-item {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
+    .stat-v{font-size:22px;font-weight:600;color:var(--text);}
+    .stat-sub{font-size:12px;color:var(--text3);margin-top:4px;}
+ 
+    /* ── Trigger card ── */
+    .trigger-card{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:12px;padding:24px;
+      display:flex;align-items:center;justify-content:space-between;gap:20px;
+      margin-bottom:32px;flex-wrap:wrap;
     }
-    .feedback-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .cycle-badge {
-      background: var(--green-glow); color: var(--green);
-      border: 1px solid #1DB95430;
-      border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700;
+    .trigger-card h2{font-size:15px;font-weight:600;margin-bottom:5px;}
+    .trigger-card p{font-size:13px;color:var(--text2);line-height:1.6;max-width:400px;}
+    .trigger-right{display:flex;flex-direction:column;gap:10px;align-items:flex-end;}
+    .btn{
+      border:none;border-radius:8px;cursor:pointer;
+      font-family:'Space Grotesk',sans-serif;font-weight:600;
+      transition:all 0.15s;white-space:nowrap;
     }
-    .score-bar-wrap { flex: 1; background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
-    .score-bar { height: 100%; border-radius: 4px; background: var(--green); transition: width 0.6s; }
-    .score-num { font-size: 12px; font-weight: 700; color: var(--green); min-width: 30px; text-align: right; }
-    .feedback-analysis { font-size: 12px; color: var(--text2); line-height: 1.5; }
-    .feedback-plays { font-size: 11px; color: var(--text3); margin-top: 4px; }
-
-    /* Empty state */
-    .empty {
-      text-align: center; padding: 2rem 1rem;
-      color: var(--text3); font-size: 13px;
+    .btn-amber{
+      background:var(--amber);color:#0d0e14;
+      padding:11px 26px;font-size:13px;letter-spacing:0.3px;
     }
-    .empty-icon { font-size: 32px; margin-bottom: 8px; }
-
-    /* Loading */
-    .loading { text-align: center; padding: 2rem; color: var(--text3); font-size: 13px; }
-    .spinner {
-      width: 20px; height: 20px; border: 2px solid var(--border);
-      border-top-color: var(--green); border-radius: 50%;
-      animation: spin 0.8s linear infinite; margin: 0 auto 8px;
+    .btn-amber:hover{background:#ffd84d;transform:translateY(-1px);}
+    .btn-amber:disabled{background:var(--text3);color:#0d0e14;transform:none;cursor:not-allowed;}
+    .btn-ghost{
+      background:transparent;border:1px solid var(--border);
+      color:var(--text2);padding:8px 16px;font-size:12px;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Playlist link */
-    .playlist-link {
-      display: inline-flex; align-items: center; gap: 6px;
-      color: var(--green); font-size: 13px; text-decoration: none;
-      padding: 6px 12px; border: 1px solid #1DB95430;
-      border-radius: 20px; transition: all 0.15s;
+    .btn-ghost:hover{border-color:var(--amber);color:var(--amber);}
+    .msg{
+      font-size:12px;padding:8px 12px;border-radius:6px;
+      display:none;
     }
-    .playlist-link:hover { background: var(--green-glow); }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .msg.ok{background:rgba(74,222,128,0.08);color:var(--green);border:1px solid rgba(74,222,128,0.2);}
+    .msg.err{background:rgba(248,113,113,0.08);color:var(--red);border:1px solid rgba(248,113,113,0.2);}
+ 
+    /* ── Two cols ── */
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+    @media(max-width:800px){.two-col{grid-template-columns:1fr;}}
+ 
+    .panel{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:12px;overflow:hidden;
+    }
+    .panel-head{
+      padding:16px 20px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .panel-title{font-size:13px;font-weight:600;letter-spacing:0.2px;}
+    .panel-sub{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;}
+    .panel-body{padding:16px 20px;max-height:420px;overflow-y:auto;}
+ 
+    /* ── Mood items ── */
+    .mood-item{
+      padding:14px;border-radius:10px;
+      background:var(--surface2);border:1px solid var(--border);
+      margin-bottom:10px;
+    }
+    .mood-item:last-child{margin-bottom:0;}
+    .mi-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+    .mi-emoji{font-size:20px;}
+    .mi-name{font-size:14px;font-weight:600;}
+    .mi-energy{
+      font-size:10px;letter-spacing:1px;text-transform:uppercase;
+      font-family:'Space Mono',monospace;padding:2px 7px;border-radius:4px;
+      background:var(--amber-dim);color:var(--amber);
+    }
+    .mi-energy.düşük{background:rgba(96,165,250,0.1);color:var(--blue);}
+    .mi-energy.orta{background:rgba(245,200,66,0.1);color:var(--amber);}
+    .mi-energy.yüksek{background:rgba(74,222,128,0.1);color:var(--green);}
+    .mi-date{font-size:10px;color:var(--text3);margin-left:auto;font-family:'Space Mono',monospace;}
+    .mi-summary{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px;}
+    .mi-tags{display:flex;flex-wrap:wrap;gap:4px;}
+    .tag{
+      font-size:10px;padding:2px 8px;border-radius:4px;
+      border:1px solid var(--border);color:var(--text3);
+    }
+    .tag.a{border-color:rgba(245,200,66,0.3);color:var(--amber);}
+ 
+    /* ── Feedback items ── */
+    .fb-item{
+      padding:14px;border-radius:10px;
+      background:var(--surface2);border:1px solid var(--border);
+      margin-bottom:10px;
+    }
+    .fb-item:last-child{margin-bottom:0;}
+    .fb-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+    .cycle-num{
+      font-family:'Space Mono',monospace;font-size:12px;font-weight:700;
+      color:var(--amber);background:var(--amber-dim);
+      padding:2px 8px;border-radius:4px;
+    }
+    .score-bar-bg{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+    .score-bar-fill{height:100%;background:var(--amber);border-radius:2px;transition:width 0.8s;}
+    .score-val{
+      font-family:'Space Mono',monospace;font-size:12px;
+      font-weight:700;color:var(--amber);min-width:28px;text-align:right;
+    }
+    .fb-analysis{font-size:12px;color:var(--text2);line-height:1.6;}
+    .fb-meta{font-size:10px;color:var(--text3);margin-top:6px;font-family:'Space Mono',monospace;}
+ 
+    /* ── Empty / loading ── */
+    .empty{
+      text-align:center;padding:32px 16px;color:var(--text3);font-size:12px;
+    }
+    .empty-ico{font-size:28px;margin-bottom:8px;}
+    .spin-wrap{text-align:center;padding:32px;color:var(--text3);font-size:12px;}
+    .spinner{
+      width:18px;height:18px;border:2px solid var(--border);
+      border-top-color:var(--amber);border-radius:50%;
+      animation:spin 0.8s linear infinite;margin:0 auto 8px;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+ 
+    /* playlist link */
+    .pl-link{
+      display:inline-flex;align-items:center;gap:6px;
+      color:var(--amber);font-size:12px;text-decoration:none;
+      border:1px solid rgba(245,200,66,0.25);border-radius:6px;
+      padding:6px 12px;transition:all 0.15s;
+      font-family:'Space Mono',monospace;letter-spacing:0.5px;
+    }
+    .pl-link:hover{background:var(--amber-dim);}
+ 
+    ::-webkit-scrollbar{width:3px;}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+ 
+    @media(max-width:900px){
+      .sidebar{display:none;}
+      .main{padding:20px;}
+      .hero-number{font-size:60px;}
+      .stats-row{grid-template-columns:1fr 1fr;}
+    }
   </style>
 </head>
 <body>
-
-<div class="header">
-  <div class="header-left">
-    <span class="logo">🎵</span>
-    <div>
-      <h1>Spotify AI Bot</h1>
-      <div class="header-sub">AI destekli dinamik playlist yöneticisi</div>
+<div class="layout">
+ 
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="wordmark">SpotiBot</div>
+      <div class="tagline">AI Playlist Manager</div>
     </div>
-  </div>
-  <div style="display:flex;align-items:center;gap:8px;">
-    <span class="status-dot" id="status-dot"></span>
-    <span style="font-size:12px;color:var(--text2)" id="status-text">Bağlanıyor...</span>
-  </div>
-</div>
-
-<!-- Setup Banner (gizli kalır, config kaydedilince) -->
-<div id="setup-banner">
-  <h3>⚙️ Bot Bağlantısını Ayarla</h3>
-  <div class="setup-form">
-    <div class="setup-row">
-      <input type="url" id="bot-url" placeholder="Railway Bot URL'si  (örn: https://xyz.railway.app)" />
-      <input type="password" id="api-secret" placeholder="API_SECRET değerin" />
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button class="btn btn-green" onclick="saveConfig()">Bağlan</button>
-      <span id="connect-msg" style="font-size:12px;color:var(--text2)"></span>
-    </div>
-  </div>
-</div>
-
-<div class="main" id="main-content" style="display:none">
-
-  <!-- Stats -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">Toplam Döngü</div>
-      <div class="stat-value" id="stat-cycle">—</div>
-      <div class="stat-sub">güncelleme</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Son Güncelleme</div>
-      <div class="stat-value" id="stat-last" style="font-size:15px;margin-top:4px">—</div>
-      <div class="stat-sub" id="stat-last-relative">—</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Güncel Ruh Hali</div>
-      <div class="stat-value" id="stat-mood" style="font-size:20px;margin-top:4px">—</div>
-      <div class="stat-sub" id="stat-energy">—</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Son Playlist Skoru</div>
-      <div class="stat-value" id="stat-score">—</div>
-      <div class="stat-sub">/ 10</div>
-    </div>
-  </div>
-
-  <!-- Trigger -->
-  <div class="trigger-section">
-    <div class="trigger-info">
-      <h3>🔄 Manuel Güncelleme</h3>
-      <p>3 gün beklemeden playlist'i hemen yenile. Bot dinleme geçmişini analiz edip yeni şarkılar seçer.</p>
-      <div class="trigger-result" id="trigger-result"></div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
-      <button class="btn btn-green" id="trigger-btn" onclick="triggerCycle()">
-        ▶ Şimdi Güncelle
-      </button>
-      <a href="#" id="playlist-link" class="playlist-link" target="_blank" style="display:none">
-        🎵 Playlist'i Aç
-      </a>
-    </div>
-  </div>
-
-  <!-- Mood + Feedback -->
-  <div class="two-col">
-    <!-- Ruh Hali Geçmişi -->
-    <div class="panel">
-      <div class="panel-header">
-        <h3>😌 Ruh Hali Geçmişi</h3>
-        <span style="font-size:11px;color:var(--text3)">Son 3 günlük dinleme analizi</span>
+    <nav class="sidebar-nav">
+      <div class="nav-item active"><span class="nav-icon">◎</span> Genel Bakış</div>
+      <div class="nav-item"><span class="nav-icon">😌</span> Ruh Hali</div>
+      <div class="nav-item"><span class="nav-icon">📊</span> Geçmiş</div>
+    </nav>
+    <div class="sidebar-status">
+      <div class="status-row">
+        <div class="dot" id="s-dot"></div>
+        <span class="status-label" id="s-label">Bağlanıyor...</span>
       </div>
-      <div class="panel-body">
-        <div class="mood-list" id="mood-list">
-          <div class="loading"><div class="spinner"></div>Yükleniyor...</div>
+    </div>
+  </aside>
+ 
+  <!-- Main -->
+  <main class="main">
+ 
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-left">
+        <div class="hero-eyebrow">Toplam Güncelleme</div>
+        <div class="hero-number" id="h-cycle">—</div>
+        <div class="hero-label">döngü tamamlandı</div>
+      </div>
+      <div class="hero-mood">
+        <div class="mood-big-emoji" id="h-emoji">🎵</div>
+        <div class="mood-big-name" id="h-mood">—</div>
+        <div class="mood-energy-tag" id="h-energy">—</div>
+      </div>
+    </div>
+ 
+    <div class="divider"></div>
+ 
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-k">Son Güncelleme</div>
+        <div class="stat-v" id="s-last" style="font-size:16px;margin-top:2px;">—</div>
+        <div class="stat-sub" id="s-ago">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-k">Son Skor</div>
+        <div class="stat-v" id="s-score">—<span style="font-size:14px;color:var(--text3)"> /10</span></div>
+        <div class="stat-sub" id="s-score-sub">AI kalite puanı</div>
+      </div>
+      <div class="stat">
+        <div class="stat-k">Playlist</div>
+        <div class="stat-v" style="font-size:14px;margin-top:4px;">
+          <a href="#" id="s-pl-link" class="pl-link" target="_blank" style="display:none;">🎵 Aç</a>
+          <span id="s-pl-none" style="font-size:13px;color:var(--text3);">—</span>
+        </div>
+        <div class="stat-sub">Spotify'da görüntüle</div>
+      </div>
+    </div>
+ 
+    <!-- Trigger -->
+    <div class="trigger-card">
+      <div>
+        <h2>Manuel Güncelleme</h2>
+        <p>3 gün beklemeden şimdi çalıştır. Bot son dinleme geçmişini analiz eder, ruh halini belirler ve playlist'i yeniler.</p>
+        <div class="msg" id="trig-msg"></div>
+      </div>
+      <div class="trigger-right">
+        <button class="btn btn-amber" id="trig-btn" onclick="triggerCycle()">▶ Şimdi Güncelle</button>
+      </div>
+    </div>
+ 
+    <!-- Two col panels -->
+    <div class="two-col">
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Ruh Hali Geçmişi</span>
+          <span class="panel-sub">Son 30 döngü</span>
+        </div>
+        <div class="panel-body" id="mood-list">
+          <div class="spin-wrap"><div class="spinner"></div>Yükleniyor...</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Playlist Geçmişi</span>
+          <span class="panel-sub">Skor & analiz</span>
+        </div>
+        <div class="panel-body" id="fb-list">
+          <div class="spin-wrap"><div class="spinner"></div>Yükleniyor...</div>
         </div>
       </div>
     </div>
-
-    <!-- Playlist Feedback -->
-    <div class="panel">
-      <div class="panel-header">
-        <h3>📊 Playlist Geçmişi</h3>
-        <span style="font-size:11px;color:var(--text3)">AI skor & analiz</span>
-      </div>
-      <div class="panel-body">
-        <div class="feedback-list" id="feedback-list">
-          <div class="loading"><div class="spinner"></div>Yükleniyor...</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+ 
+  </main>
 </div>
-
+ 
 <script>
-  let BOT_URL = '';
-  let API_SECRET = '';
-  let refreshTimer = null;
-
-  // Config yükle
-  function loadConfig() {
-    BOT_URL = 'https://spotibot-production-67bb.up.railway.app';
-    API_SECRET = 'said';
-    document.getElementById('setup-banner').style.display = 'none';
-    document.getElementById('main-content').style.display = 'block';
-    fetchStatus();
-    refreshTimer = setInterval(fetchStatus, 30000);
-  }
-
-  function saveConfig() {
-    const url = document.getElementById('bot-url').value.trim().replace(/\/$/, '');
-    const secret = document.getElementById('api-secret').value.trim();
-    if (!url || !secret) { alert('Her iki alanı da doldur.'); return; }
-    BOT_URL = url;
-    API_SECRET = secret;
-    localStorage.setItem('bot_url', url);
-    localStorage.setItem('api_secret', secret);
-    document.getElementById('connect-msg').textContent = 'Bağlanıyor...';
-    document.getElementById('setup-banner').style.display = 'none';
-    document.getElementById('main-content').style.display = 'block';
-    fetchStatus();
-    if (refreshTimer) clearInterval(refreshTimer);
-    refreshTimer = setInterval(fetchStatus, 30000);
-  }
-
+  const BOT_URL    = 'https://spotibot-production-67bb.up.railway.app';
+  const API_SECRET = 'said';
+ 
   async function fetchStatus() {
-    const dot = document.getElementById('status-dot');
-    const statusText = document.getElementById('status-text');
     try {
-      const res = await fetch(`${BOT_URL}/status`, {
-        headers: { 'X-API-Secret': API_SECRET }
-      });
-      if (!res.ok) throw new Error('Auth hatası');
-      const data = await res.json();
-      renderStatus(data);
-      dot.className = data.is_running ? 'status-dot running' : 'status-dot online';
-      statusText.textContent = data.is_running ? 'Güncelleniyor...' : 'Çevrimiçi';
-    } catch (e) {
-      dot.className = 'status-dot';
-      statusText.textContent = 'Bağlantı hatası';
-      console.error(e);
+      const res = await fetch(`${BOT_URL}/status`, { headers: {'X-API-Secret': API_SECRET} });
+      if (!res.ok) throw new Error('auth');
+      const d = await res.json();
+      render(d);
+      const dot = document.getElementById('s-dot');
+      dot.className = 'dot ' + (d.is_running ? 'running' : 'online');
+      document.getElementById('s-label').textContent = d.is_running ? 'Güncelleniyor...' : 'Çevrimiçi';
+    } catch(e) {
+      document.getElementById('s-dot').className = 'dot';
+      document.getElementById('s-label').textContent = 'Bağlantı hatası';
     }
   }
-
-  function renderStatus(data) {
-    // Stats
-    document.getElementById('stat-cycle').textContent = data.cycle || 0;
-
-    if (data.last_update) {
-      const d = new Date(data.last_update);
-      document.getElementById('stat-last').textContent = d.toLocaleDateString('tr-TR', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-      document.getElementById('stat-last-relative').textContent = timeAgo(d);
+ 
+  function render(d) {
+    document.getElementById('h-cycle').textContent = d.cycle ?? '0';
+ 
+    const moods = d.mood_history || [];
+    if (moods.length) {
+      const last = moods[moods.length-1];
+      document.getElementById('h-emoji').textContent = last.mood_emoji || '🎵';
+      document.getElementById('h-mood').textContent  = last.mood || '—';
+      document.getElementById('h-energy').textContent= last.energy_level || '—';
     }
-
-    // Son ruh hali
-    const moods = data.mood_history || [];
-    if (moods.length > 0) {
-      const last = moods[moods.length - 1];
-      document.getElementById('stat-mood').textContent = `${last.mood_emoji || ''} ${last.mood || '—'}`;
-      document.getElementById('stat-energy').textContent = `Enerji: ${last.energy_level || '—'}`;
+ 
+    if (d.last_update) {
+      const dt = new Date(d.last_update);
+      document.getElementById('s-last').textContent = dt.toLocaleDateString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      document.getElementById('s-ago').textContent  = ago(dt);
     }
-
-    // Son skor
-    const feedbacks = data.feedback_history || [];
-    if (feedbacks.length > 0) {
-      const last = feedbacks[feedbacks.length - 1];
-      document.getElementById('stat-score').textContent = last.score?.toFixed(1) || '—';
+ 
+    const fbs = d.feedback_history || [];
+    if (fbs.length) {
+      const last = fbs[fbs.length-1];
+      document.getElementById('s-score').innerHTML = `${last.score?.toFixed(1)}<span style="font-size:14px;color:var(--text3)"> /10</span>`;
     }
-
-    // Playlist linki
-    if (data.playlist_id) {
-      const link = document.getElementById('playlist-link');
-      link.href = `https://open.spotify.com/playlist/${data.playlist_id}`;
-      link.style.display = 'inline-flex';
+ 
+    if (d.playlist_id) {
+      const a = document.getElementById('s-pl-link');
+      a.href = `https://open.spotify.com/playlist/${d.playlist_id}`;
+      a.style.display = 'inline-flex';
+      document.getElementById('s-pl-none').style.display = 'none';
     }
-
-    // Ruh hali geçmişi
-    renderMoodHistory(moods.slice().reverse());
-
-    // Feedback geçmişi
-    renderFeedbackHistory(feedbacks.slice().reverse());
+ 
+    renderMoods([...moods].reverse());
+    renderFeedbacks([...fbs].reverse());
   }
-
-  function renderMoodHistory(moods) {
+ 
+  function renderMoods(moods) {
     const el = document.getElementById('mood-list');
     if (!moods.length) {
-      el.innerHTML = `<div class="empty"><div class="empty-icon">😶</div>Henüz ruh hali verisi yok.<br>İlk döngü tamamlandıktan sonra burada görünecek.</div>`;
+      el.innerHTML = `<div class="empty"><div class="empty-ico">😶</div>Henüz ruh hali verisi yok.<br>İlk döngü sonrası burada görünür.</div>`;
       return;
     }
     el.innerHTML = moods.map(m => `
       <div class="mood-item">
-        <div class="mood-top">
-          <span class="mood-emoji">${m.mood_emoji || '🎵'}</span>
-          <span class="mood-name">${m.mood || '—'}</span>
-          <span class="energy-badge ${m.energy_level || 'orta'}">${m.energy_level || 'orta'}</span>
-          <span class="mood-date">${formatDate(m.date)} · ${m.trigger || 'Otomatik'}</span>
+        <div class="mi-top">
+          <span class="mi-emoji">${m.mood_emoji||'🎵'}</span>
+          <span class="mi-name">${m.mood||'—'}</span>
+          <span class="mi-energy ${m.energy_level||'orta'}">${m.energy_level||'orta'}</span>
+          <span class="mi-date">${fmtDate(m.date)}</span>
         </div>
-        <div class="mood-summary">${m.summary || ''}</div>
-        <div class="mood-tags">
-          ${(m.dominant_genres || []).map(g => `<span class="mood-tag">${g}</span>`).join('')}
-          ${(m.top_artists_this_period || []).map(a => `<span class="mood-tag green">${a}</span>`).join('')}
+        <div class="mi-summary">${m.summary||''}</div>
+        <div class="mi-tags">
+          ${(m.dominant_genres||[]).map(g=>`<span class="tag">${g}</span>`).join('')}
+          ${(m.top_artists_this_period||[]).map(a=>`<span class="tag a">${a}</span>`).join('')}
         </div>
       </div>
     `).join('');
   }
-
-  function renderFeedbackHistory(feedbacks) {
-    const el = document.getElementById('feedback-list');
-    if (!feedbacks.length) {
-      el.innerHTML = `<div class="empty"><div class="empty-icon">📭</div>Henüz playlist geçmişi yok.<br>İlk güncelleme sonrası burada görünecek.</div>`;
+ 
+  function renderFeedbacks(fbs) {
+    const el = document.getElementById('fb-list');
+    if (!fbs.length) {
+      el.innerHTML = `<div class="empty"><div class="empty-ico">📭</div>Henüz playlist geçmişi yok.<br>İlk güncelleme sonrası burada görünür.</div>`;
       return;
     }
-    el.innerHTML = feedbacks.map(f => `
-      <div class="feedback-item">
-        <div class="feedback-top">
-          <span class="cycle-badge">#${f.cycle}</span>
-          <div class="score-bar-wrap">
-            <div class="score-bar" style="width:${(f.score/10)*100}%"></div>
-          </div>
-          <span class="score-num">${f.score?.toFixed(1)}</span>
+    el.innerHTML = fbs.map(f => `
+      <div class="fb-item">
+        <div class="fb-top">
+          <span class="cycle-num">#${f.cycle}</span>
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:${(f.score/10)*100}%"></div></div>
+          <span class="score-val">${f.score?.toFixed(1)}</span>
         </div>
-        <div class="feedback-analysis">${f.analysis || '—'}</div>
-        <div class="feedback-plays">Ort. çalma: ${f.avg_plays?.toFixed(1) || 0} · ${formatDate(f.date)}</div>
+        <div class="fb-analysis">${f.analysis||'—'}</div>
+        <div class="fb-meta">ort. çalma: ${f.avg_plays?.toFixed(1)||0} · ${fmtDate(f.date)}</div>
       </div>
     `).join('');
   }
-
+ 
   async function triggerCycle() {
-    const btn = document.getElementById('trigger-btn');
-    const result = document.getElementById('trigger-result');
-    btn.disabled = true;
-    btn.textContent = '⏳ Başlatılıyor...';
-    result.style.display = 'none';
-
+    const btn = document.getElementById('trig-btn');
+    const msg = document.getElementById('trig-msg');
+    btn.disabled = true; btn.textContent = '⏳ Başlatılıyor...'; msg.style.display='none';
     try {
       const res = await fetch(`${BOT_URL}/trigger`, {
-        method: 'POST',
-        headers: { 'X-API-Secret': API_SECRET }
+        method:'POST', headers:{'X-API-Secret': API_SECRET}
       });
       const data = await res.json();
       if (res.status === 409) {
-        result.className = 'trigger-result error';
-        result.textContent = '⚠️ Bot zaten çalışıyor, lütfen bekle.';
+        msg.className='msg err'; msg.textContent='⚠️ Bot zaten çalışıyor.';
       } else if (res.ok) {
-        result.className = 'trigger-result success';
-        result.textContent = '✅ Döngü başlatıldı! Birkaç dakika içinde playlist güncellenecek.';
-        setTimeout(fetchStatus, 5000);
-        setTimeout(fetchStatus, 15000);
-        setTimeout(fetchStatus, 30000);
-      } else {
-        throw new Error(data.message || 'Hata');
-      }
-    } catch (e) {
-      result.className = 'trigger-result error';
-      result.textContent = `❌ Hata: ${e.message}`;
+        msg.className='msg ok'; msg.textContent='✅ Döngü başlatıldı! Birkaç dakika içinde güncellenir.';
+        setTimeout(fetchStatus,5000); setTimeout(fetchStatus,20000); setTimeout(fetchStatus,45000);
+      } else { throw new Error(data.message||'Hata'); }
+    } catch(e) {
+      msg.className='msg err'; msg.textContent=`❌ ${e.message}`;
     }
-
-    result.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = '▶ Şimdi Güncelle';
+    msg.style.display='block'; btn.disabled=false; btn.textContent='▶ Şimdi Güncelle';
   }
-
-  function timeAgo(date) {
-    const diff = Math.floor((Date.now() - date) / 1000);
-    if (diff < 60) return 'Az önce';
-    if (diff < 3600) return `${Math.floor(diff/60)} dakika önce`;
-    if (diff < 86400) return `${Math.floor(diff/3600)} saat önce`;
-    return `${Math.floor(diff/86400)} gün önce`;
+ 
+  function ago(d) {
+    const s = Math.floor((Date.now()-d)/1000);
+    if(s<60) return 'Az önce';
+    if(s<3600) return `${Math.floor(s/60)} dk önce`;
+    if(s<86400) return `${Math.floor(s/3600)} saat önce`;
+    return `${Math.floor(s/86400)} gün önce`;
   }
-
-  function formatDate(iso) {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleDateString('tr-TR', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  function fmtDate(iso) {
+    if(!iso) return '—';
+    return new Date(iso).toLocaleDateString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
   }
-
-  loadConfig();
+ 
+  fetchStatus();
+  setInterval(fetchStatus, 30000);
 </script>
 </body>
 </html>
