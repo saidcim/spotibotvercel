@@ -354,7 +354,7 @@
     <div class="panel">
       <div class="panel-header">
         <h3>😌 Ruh Hali Geçmişi</h3>
-        <span style="font-size:11px;color:var(--text3)">Son 2 günlük dinleme analizi</span>
+        <span style="font-size:11px;color:var(--text3)">Son 3 günlük dinleme analizi</span>
       </div>
       <div class="panel-body">
         <div class="mood-list" id="mood-list">
@@ -411,11 +411,31 @@
   let API_SECRET = '';
   let refreshTimer = null;
 
+  // #region agent log
+  function dbgLog(location, message, data, hypothesisId) {
+    fetch('http://127.0.0.1:7342/ingest/cd08d7ac-240e-4b0c-8feb-dd8975579a4d', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'ba6a54' },
+      body: JSON.stringify({ sessionId: 'ba6a54', location, message, data, timestamp: Date.now(), hypothesisId })
+    }).catch(() => {});
+  }
+  // #endregion
+
   function loadConfig() {
     const savedUrl = localStorage.getItem('bot_url');
     const savedSecret = localStorage.getItem('api_secret');
     BOT_URL = savedUrl || 'https://spotibot-production-67bb.up.railway.app';
     API_SECRET = savedSecret || 'said';
+
+    // #region agent log
+    dbgLog('index.html:loadConfig', 'config loaded', {
+      botHost: (() => { try { return new URL(BOT_URL).host; } catch { return 'invalid-url'; } })(),
+      hasSavedUrl: !!savedUrl,
+      hasSavedSecret: !!savedSecret,
+      secretLen: API_SECRET ? API_SECRET.length : 0,
+      pageOrigin: window.location.origin
+    }, 'A');
+    // #endregion
 
     if (savedUrl && savedSecret) {
       document.getElementById('setup-banner').style.display = 'none';
@@ -451,18 +471,45 @@
   async function fetchStatus() {
     const dot = document.getElementById('status-dot');
     const statusText = document.getElementById('status-text');
+    const requestUrl = `${BOT_URL}/status`;
+    // #region agent log
+    dbgLog('index.html:fetchStatus', 'request start', {
+      botHost: (() => { try { return new URL(BOT_URL).host; } catch { return 'invalid-url'; } })(),
+      secretLen: API_SECRET ? API_SECRET.length : 0,
+      requestPath: '/status'
+    }, 'B');
+    // #endregion
     try {
-      const res = await fetch(`${BOT_URL}/status`, {
+      const res = await fetch(requestUrl, {
         headers: { 'X-API-Secret': API_SECRET }
       });
-      if (!res.ok) throw new Error('Auth hatası');
+      // #region agent log
+      dbgLog('index.html:fetchStatus', 'response received', {
+        httpStatus: res.status,
+        ok: res.ok,
+        corsOk: true
+      }, res.status === 401 ? 'C' : res.ok ? 'OK' : 'D');
+      // #endregion
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       renderStatus(data);
       dot.className = data.is_running ? 'status-dot running' : 'status-dot online';
       statusText.textContent = data.is_running ? 'Güncelleniyor...' : 'Çevrimiçi';
     } catch (e) {
       dot.className = 'status-dot';
-      statusText.textContent = 'Bağlantı hatası';
+      const errMsg = e && e.message ? e.message : String(e);
+      const isAuth = errMsg.includes('401');
+      const isNetwork = e instanceof TypeError || errMsg.includes('Failed to fetch');
+      statusText.textContent = isAuth ? 'Yetki hatası (API_SECRET)' : isNetwork ? 'Bağlantı hatası (ağ/CORS)' : `Hata: ${errMsg}`;
+      // #region agent log
+      dbgLog('index.html:fetchStatus', 'request failed', {
+        errorName: e && e.name,
+        errorMessage: errMsg,
+        isAuth,
+        isNetwork,
+        botHost: (() => { try { return new URL(BOT_URL).host; } catch { return 'invalid-url'; } })()
+      }, isAuth ? 'C' : isNetwork ? 'E' : 'D');
+      // #endregion
       console.error(e);
     }
   }
