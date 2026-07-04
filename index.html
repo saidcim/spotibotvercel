@@ -5,20 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🎵 Spotify AI Bot Dashboard</title>
   <style>
+    /* ── Dark Neumorphism ─────────────────────────────────────────── */
     :root {
+      --bg: #21242c;
+      --bg2: #1c1f26;
       --green: #1DB954;
-      --green-dark: #158a3e;
-      --green-glow: rgba(29,185,84,0.15);
-      --bg: #0a0a0a;
-      --surface: #141414;
-      --surface2: #1a1a1a;
-      --border: #2a2a2a;
-      --text: #ffffff;
-      --text2: #a0a0a0;
-      --text3: #606060;
-      --red: #e05555;
-      --yellow: #f5a623;
-      --blue: #4a9eff;
+      --green-soft: #2ee06b;
+      --green-glow: rgba(29,185,84,0.14);
+      --blue: #5aa7ff;
+      --purple: #a78bfa;
+      --yellow: #f5c04a;
+      --red: #ef7070;
+      --text: #e9ebf1;
+      --text2: #9aa1b0;
+      --text3: #616876;
+      --hl: rgba(255,255,255,0.045);      /* light source */
+      --sh: rgba(0,0,0,0.55);             /* shadow */
+      --r: 18px;
+      --out: -8px -8px 16px var(--hl), 8px 8px 16px var(--sh);
+      --out-sm: -4px -4px 9px var(--hl), 4px 4px 9px var(--sh);
+      --in: inset -4px -4px 8px var(--hl), inset 4px 4px 8px var(--sh);
+      --in-sm: inset -2px -2px 5px var(--hl), inset 2px 2px 5px var(--sh);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -26,239 +33,211 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 0;
     }
 
     /* Header */
     .header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      padding: 1.1rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 100;
+      background: linear-gradient(180deg, var(--bg) 75%, transparent);
     }
-    .header-left { display: flex; align-items: center; gap: 12px; }
-    .logo { font-size: 22px; }
-    .header h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .logo {
+      width: 44px; height: 44px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; background: var(--bg); box-shadow: var(--out-sm);
+    }
+    .header h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
     .header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--text3); display: inline-block;
-      transition: background 0.3s;
+    .status-pill {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-radius: 30px;
+      background: var(--bg); box-shadow: var(--in-sm);
+      font-size: 12px; color: var(--text2);
     }
-    .status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
-    .status-dot.running { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); animation: pulse 0.8s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); transition: background .3s; }
+    .status-dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+    .status-dot.running { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); animation: pulse .8s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
 
     /* Setup banner */
     #setup-banner {
-      background: linear-gradient(135deg, #1a1200, #1a0a00);
-      border: 1px solid #f5a62344;
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin: 1.5rem 2rem;
+      background: var(--bg); box-shadow: var(--out);
+      border-radius: var(--r); padding: 1.5rem; margin: 1.5rem 2rem;
     }
-    #setup-banner h3 { color: var(--yellow); margin-bottom: 0.75rem; font-size: 14px; }
+    #setup-banner h3 { color: var(--yellow); margin-bottom: .8rem; font-size: 14px; }
     .setup-form { display: flex; flex-direction: column; gap: 10px; }
     .setup-row { display: flex; gap: 10px; flex-wrap: wrap; }
     .setup-form input {
       flex: 1; min-width: 200px;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px 14px;
+      background: var(--bg); box-shadow: var(--in-sm);
+      border: none; border-radius: 12px; padding: 12px 16px;
       color: var(--text); font-size: 13px; outline: none;
     }
-    .setup-form input:focus { border-color: var(--green); }
+    .setup-form input:focus { box-shadow: var(--in-sm), 0 0 0 1px var(--green); }
+
     .btn {
-      padding: 10px 20px; border-radius: 8px; border: none;
-      font-size: 13px; font-weight: 600; cursor: pointer;
-      transition: all 0.15s; white-space: nowrap;
+      padding: 11px 22px; border-radius: 14px; border: none;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      background: var(--bg); color: var(--text); box-shadow: var(--out-sm);
+      transition: box-shadow .12s, transform .12s, color .12s;
     }
-    .btn-green { background: var(--green); color: #000; }
-    .btn-green:hover { background: #1ed760; transform: translateY(-1px); }
-    .btn-green:disabled { background: var(--text3); cursor: not-allowed; transform: none; }
-    .btn-outline {
-      background: transparent; color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn-outline:hover { border-color: var(--green); color: var(--green); }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { box-shadow: var(--in-sm); transform: translateY(0); }
+    .btn-green { color: var(--green-soft); }
+    .btn-green:disabled { color: var(--text3); cursor: not-allowed; box-shadow: var(--in-sm); transform: none; }
+    .btn-outline { font-weight: 600; color: var(--text2); }
+    .btn-outline:hover { color: var(--green-soft); }
 
-    /* Main layout */
-    .main { padding: 1.5rem 2rem; max-width: 1100px; margin: 0 auto; }
+    .main { padding: 1.2rem 2rem 2.5rem; max-width: 1100px; margin: 0 auto; }
 
-    /* Cards grid */
+    /* Stat cards */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+      gap: 18px; margin-bottom: 1.6rem;
     }
     .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.2rem;
+      background: var(--bg); box-shadow: var(--out);
+      border-radius: var(--r); padding: 1.15rem 1.2rem;
     }
-    .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
-    .stat-value { font-size: 26px; font-weight: 700; letter-spacing: -1px; color: var(--green); }
-    .stat-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+    .stat-label { font-size: 10.5px; color: var(--text3); text-transform: uppercase; letter-spacing: .9px; margin-bottom: 8px; }
+    .stat-value { font-size: 25px; font-weight: 800; letter-spacing: -1px; color: var(--green-soft); }
+    .stat-value.blue { color: var(--blue); }
+    .stat-value.purple { color: var(--purple); }
+    .stat-sub { font-size: 11.5px; color: var(--text2); margin-top: 5px; }
 
-    /* Trigger button */
+    /* Panels */
+    .panel {
+      background: var(--bg); box-shadow: var(--out);
+      border-radius: var(--r); overflow: hidden;
+    }
+    .panel-header {
+      padding: 1rem 1.3rem .6rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .panel-header h3 { font-size: 14px; font-weight: 700; }
+    .panel-hint { font-size: 11px; color: var(--text3); }
+    .panel-body { padding: .8rem 1.3rem 1.3rem; }
+
     .trigger-section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
+      background: var(--bg); box-shadow: var(--out);
+      border-radius: var(--r); padding: 1.4rem;
+      margin-bottom: 1.6rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap;
     }
     .trigger-info h3 { font-size: 15px; margin-bottom: 4px; }
     .trigger-info p { font-size: 13px; color: var(--text2); }
-    #trigger-btn {
-      padding: 12px 28px;
-      font-size: 14px;
-      min-width: 180px;
-    }
+    #trigger-btn { padding: 13px 28px; font-size: 14px; min-width: 180px; }
     .trigger-result {
-      font-size: 13px; margin-top: 8px; padding: 8px 12px;
-      border-radius: 8px; display: none;
+      font-size: 13px; margin-top: 10px; padding: 9px 14px;
+      border-radius: 12px; display: none; box-shadow: var(--in-sm);
     }
-    .trigger-result.success { background: var(--green-glow); color: var(--green); border: 1px solid #1DB95430; }
-    .trigger-result.error { background: rgba(224,85,85,0.1); color: var(--red); border: 1px solid #e0555530; }
+    .trigger-result.success { color: var(--green-soft); }
+    .trigger-result.error { color: var(--red); }
 
-    /* Two column layout */
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 1.6rem; }
     @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
 
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
+    /* Inset wells (list items) */
+    .well {
+      background: var(--bg); box-shadow: var(--in-sm);
+      border-radius: 14px; padding: 12px 14px;
     }
-    .panel-header {
-      padding: 1rem 1.2rem;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .panel-header h3 { font-size: 14px; font-weight: 600; }
-    .panel-body { padding: 1rem 1.2rem; }
-
-    /* Mood history */
-    .mood-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; }
-    .mood-item {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-    }
-    .mood-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .mood-emoji { font-size: 22px; }
-    .mood-name { font-size: 14px; font-weight: 600; }
+    .mood-list, .feedback-list { display: flex; flex-direction: column; gap: 12px; max-height: 380px; overflow-y: auto; padding: 4px; }
+    .mood-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+    .mood-emoji { font-size: 20px; }
+    .mood-name { font-size: 14px; font-weight: 700; }
     .mood-date { font-size: 11px; color: var(--text3); margin-left: auto; }
-    .mood-summary { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 6px; }
-    .mood-tags { display: flex; flex-wrap: wrap; gap: 4px; }
-    .mood-tag {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 2px 8px;
-      font-size: 11px; color: var(--text2);
+    .mood-summary { font-size: 12px; color: var(--text2); line-height: 1.55; margin-bottom: 7px; }
+    .mood-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .chip {
+      padding: 3px 10px; border-radius: 20px; font-size: 11px;
+      color: var(--text2); box-shadow: var(--in-sm); background: var(--bg);
     }
-    .mood-tag.green { border-color: var(--green); color: var(--green); }
-    .energy-badge {
-      padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600;
-    }
-    .energy-badge.düşük { background: rgba(74,158,255,0.15); color: var(--blue); }
-    .energy-badge.orta { background: rgba(245,166,35,0.15); color: var(--yellow); }
-    .energy-badge.yüksek { background: rgba(29,185,84,0.15); color: var(--green); }
+    .chip.green { color: var(--green-soft); }
+    .chip.blue { color: var(--blue); }
+    .chip.purple { color: var(--purple); }
+    .chip.yellow { color: var(--yellow); }
 
-    /* Feedback history */
-    .feedback-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; }
-    .feedback-item {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-    }
-    .feedback-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .feedback-top { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
     .cycle-badge {
-      background: var(--green-glow); color: var(--green);
-      border: 1px solid #1DB95430;
-      border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700;
+      padding: 3px 11px; border-radius: 20px; font-size: 11px; font-weight: 800;
+      color: var(--green-soft); box-shadow: var(--in-sm);
     }
-    .score-bar-wrap { flex: 1; background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
-    .score-bar { height: 100%; border-radius: 4px; background: var(--green); transition: width 0.6s; }
-    .score-num { font-size: 12px; font-weight: 700; color: var(--green); min-width: 30px; text-align: right; }
-    .feedback-analysis { font-size: 12px; color: var(--text2); line-height: 1.5; }
-    .feedback-plays { font-size: 11px; color: var(--text3); margin-top: 4px; }
+    .score-bar-wrap { flex: 1; border-radius: 6px; height: 9px; overflow: hidden; box-shadow: var(--in-sm); background: var(--bg2); }
+    .score-bar { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--green), var(--green-soft)); transition: width .6s; }
+    .score-bar.eng { background: linear-gradient(90deg, #3a7bd5, var(--blue)); }
+    .score-num { font-size: 12px; font-weight: 800; color: var(--green-soft); min-width: 30px; text-align: right; }
+    .score-num.blue { color: var(--blue); }
+    .feedback-analysis { font-size: 12px; color: var(--text2); line-height: 1.55; }
+    .feedback-meta { font-size: 11px; color: var(--text3); margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
 
-    /* Empty state */
-    .empty {
-      text-align: center; padding: 2rem 1rem;
-      color: var(--text3); font-size: 13px;
-    }
-    .empty-icon { font-size: 32px; margin-bottom: 8px; }
-
-    /* Loading */
+    .empty { text-align: center; padding: 2rem 1rem; color: var(--text3); font-size: 13px; }
+    .empty-icon { font-size: 30px; margin-bottom: 8px; }
     .loading { text-align: center; padding: 2rem; color: var(--text3); font-size: 13px; }
     .spinner {
-      width: 20px; height: 20px; border: 2px solid var(--border);
+      width: 20px; height: 20px; border: 2px solid var(--bg2);
       border-top-color: var(--green); border-radius: 50%;
-      animation: spin 0.8s linear infinite; margin: 0 auto 8px;
+      animation: spin .8s linear infinite; margin: 0 auto 8px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Playlist link */
     .playlist-link {
       display: inline-flex; align-items: center; gap: 6px;
-      color: var(--green); font-size: 13px; text-decoration: none;
-      padding: 6px 12px; border: 1px solid #1DB95430;
-      border-radius: 20px; transition: all 0.15s;
+      color: var(--green-soft); font-size: 13px; text-decoration: none;
+      padding: 8px 16px; border-radius: 20px;
+      box-shadow: var(--out-sm); transition: all .15s;
     }
-    .playlist-link:hover { background: var(--green-glow); }
+    .playlist-link:active { box-shadow: var(--in-sm); }
 
-    /* Learning panel */
-    .pattern-list { display: flex; flex-direction: column; gap: 8px; }
+    .pattern-list { display: flex; flex-direction: column; gap: 10px; padding: 4px; }
     .pattern-item {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px 12px; font-size: 12px;
-      color: var(--text2); line-height: 1.5;
+      background: var(--bg); box-shadow: var(--in-sm);
+      border-radius: 12px; padding: 11px 14px; font-size: 12px;
+      color: var(--text2); line-height: 1.55;
       border-left: 3px solid var(--green);
     }
     .adapt-badge {
-      display: inline-block; padding: 2px 8px; border-radius: 20px;
-      font-size: 11px; font-weight: 600;
-      background: var(--green-glow); color: var(--green);
-      border: 1px solid #1DB95430;
+      padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+      color: var(--green-soft); box-shadow: var(--in-sm);
     }
-    .score-chart { width: 100%; height: 60px; margin-top: 8px; }
-    .score-chart polyline { fill: none; stroke: var(--green); stroke-width: 2; }
-    .score-chart circle { fill: var(--green); }
 
-    /* Archive table */
+    /* Strateji (dynamic config) mini panel */
+    .strategy-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+    .strategy-item {
+      flex: 1; min-width: 130px;
+      background: var(--bg); box-shadow: var(--in-sm);
+      border-radius: 14px; padding: 12px 14px;
+    }
+    .strategy-item .k { font-size: 10.5px; color: var(--text3); text-transform: uppercase; letter-spacing: .8px; }
+    .strategy-item .v { font-size: 19px; font-weight: 800; margin-top: 3px; }
+    .strategy-item .v.green { color: var(--green-soft); }
+    .strategy-item .v.purple { color: var(--purple); }
+    .strategy-item .v.blue { color: var(--blue); }
+    .strategy-reason { font-size: 11.5px; color: var(--text2); margin-top: 10px; line-height: 1.5; }
+
+    .score-chart { width: 100%; height: 70px; margin-top: 6px; }
+    .chart-legend { display: flex; gap: 14px; font-size: 11px; color: var(--text2); margin-top: 6px; }
+    .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
     .archive-table { width: 100%; border-collapse: collapse; font-size: 12px; }
     .archive-table th {
       text-align: left; padding: 8px 6px; color: var(--text3);
-      font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
-      border-bottom: 1px solid var(--border);
+      font-size: 10px; text-transform: uppercase; letter-spacing: .5px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
-    .archive-table td {
-      padding: 8px 6px; color: var(--text2);
-      border-bottom: 1px solid var(--border);
-    }
+    .archive-table td { padding: 8px 6px; color: var(--text2); border-bottom: 1px solid rgba(255,255,255,0.04); }
     .archive-table tr:last-child td { border-bottom: none; }
     .archive-wrap { max-height: 300px; overflow-y: auto; }
+    .td-disc { color: var(--purple); font-weight: 700; }
+    .td-eng { color: var(--blue); font-weight: 700; }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -271,19 +250,19 @@
       <div class="header-sub">AI destekli dinamik playlist yöneticisi</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;">
+  <div class="status-pill">
     <span class="status-dot" id="status-dot"></span>
-    <span style="font-size:12px;color:var(--text2)" id="status-text">Bağlanıyor...</span>
+    <span id="status-text">Bağlanıyor...</span>
   </div>
 </div>
 
-<!-- Setup Banner (gizli kalır, config kaydedilince) -->
+<!-- Setup Banner -->
 <div id="setup-banner">
   <h3>⚙️ Bot Bağlantısını Ayarla</h3>
   <div class="setup-form">
     <div class="setup-row">
       <input type="url" id="bot-url" placeholder="Railway Bot URL'si  (örn: https://xyz.railway.app)" />
-      <input type="password" id="api-secret" placeholder="said" />
+      <input type="password" id="api-secret" placeholder="API secret" />
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <button class="btn btn-green" onclick="saveConfig()">Bağlan</button>
@@ -308,26 +287,35 @@
     </div>
     <div class="stat-card">
       <div class="stat-label">Güncel Ruh Hali</div>
-      <div class="stat-value" id="stat-mood" style="font-size:20px;margin-top:4px">—</div>
+      <div class="stat-value" id="stat-mood" style="font-size:19px;margin-top:4px">—</div>
       <div class="stat-sub" id="stat-energy">—</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Son Playlist Skoru</div>
+      <div class="stat-label">AI Skoru</div>
       <div class="stat-value" id="stat-score">—</div>
-      <div class="stat-sub">/ 10</div>
+      <div class="stat-sub">/ 10 · AI öz değerlendirme</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Adaptasyon</div>
-      <div class="stat-value" id="stat-adapt" style="font-size:20px;margin-top:4px">—</div>
-      <div class="stat-sub" id="stat-confidence">Güven: —</div>
+      <div class="stat-label">Gerçek Skor</div>
+      <div class="stat-value blue" id="stat-engagement">—</div>
+      <div class="stat-sub">/ 10 · dinleme verisinden</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Keşif</div>
+      <div class="stat-value purple" id="stat-discovery">—</div>
+      <div class="stat-sub" id="stat-discovery-sub">yeni şarkı / playlist</div>
     </div>
   </div>
 
   <!-- Score trend -->
-  <div class="panel" style="margin-bottom:1.5rem" id="score-trend-panel" hidden>
-    <div class="panel-header"><h3>📈 Skor Trendi</h3></div>
+  <div class="panel" style="margin-bottom:1.6rem" id="score-trend-panel" hidden>
+    <div class="panel-header"><h3>📈 Skor Trendi</h3><span class="panel-hint">AI skoru vs gerçek dinleme skoru</span></div>
     <div class="panel-body">
-      <svg class="score-chart" id="score-chart" viewBox="0 0 300 60" preserveAspectRatio="none"></svg>
+      <svg class="score-chart" id="score-chart" viewBox="0 0 300 70" preserveAspectRatio="none"></svg>
+      <div class="chart-legend">
+        <span><span class="legend-dot" style="background:var(--green)"></span>AI skoru</span>
+        <span><span class="legend-dot" style="background:var(--blue)"></span>Gerçek skor (engagement)</span>
+      </div>
     </div>
   </div>
 
@@ -338,23 +326,46 @@
       <p>2 gün beklemeden playlist'i hemen yenile. Bot dinleme geçmişini analiz edip yeni şarkılar seçer.</p>
       <div class="trigger-result" id="trigger-result"></div>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
-      <button class="btn btn-green" id="trigger-btn" onclick="triggerCycle()">
-        ▶ Şimdi Güncelle
-      </button>
-      <a href="#" id="playlist-link" class="playlist-link" target="_blank" style="display:none">
-        🎵 Playlist'i Aç
-      </a>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+      <button class="btn btn-green" id="trigger-btn" onclick="triggerCycle()">▶ Şimdi Güncelle</button>
+      <a href="#" id="playlist-link" class="playlist-link" target="_blank" style="display:none">🎵 Playlist'i Aç</a>
+    </div>
+  </div>
+
+  <!-- Strateji -->
+  <div class="panel" style="margin-bottom:1.6rem">
+    <div class="panel-header">
+      <h3>🎛️ Bot Stratejisi</h3>
+      <span class="panel-hint">Dinleme verisine göre kendini ayarlar</span>
+    </div>
+    <div class="panel-body">
+      <div class="strategy-row">
+        <div class="strategy-item">
+          <div class="k">Taşıma Limiti</div>
+          <div class="v green" id="strat-carry">—</div>
+          <div class="stat-sub">eski şarkı / döngü</div>
+        </div>
+        <div class="strategy-item">
+          <div class="k">Keşif Kontenjanı</div>
+          <div class="v purple" id="strat-discovery">—</div>
+          <div class="stat-sub">hiç dinlenmemiş şarkı</div>
+        </div>
+        <div class="strategy-item">
+          <div class="k">Çalma Sayacı</div>
+          <div class="v blue" id="strat-plays">—</div>
+          <div class="stat-sub">bu döngüde biriken çalma</div>
+        </div>
+      </div>
+      <div class="strategy-reason" id="strat-reason"></div>
     </div>
   </div>
 
   <!-- Mood + Feedback -->
   <div class="two-col">
-    <!-- Ruh Hali Geçmişi -->
     <div class="panel">
       <div class="panel-header">
         <h3>😌 Ruh Hali Geçmişi</h3>
-        <span style="font-size:11px;color:var(--text3)">Son 3 günlük dinleme analizi</span>
+        <span class="panel-hint">Son 3 günlük dinleme analizi</span>
       </div>
       <div class="panel-body">
         <div class="mood-list" id="mood-list">
@@ -363,11 +374,10 @@
       </div>
     </div>
 
-    <!-- Playlist Feedback -->
     <div class="panel">
       <div class="panel-header">
         <h3>📊 Playlist Geçmişi</h3>
-        <span style="font-size:11px;color:var(--text3)">AI skor & analiz</span>
+        <span class="panel-hint">AI skor & gerçek skor</span>
       </div>
       <div class="panel-body">
         <div class="feedback-list" id="feedback-list">
@@ -394,7 +404,7 @@
     <div class="panel">
       <div class="panel-header">
         <h3>📁 Playlist Arşivi</h3>
-        <button class="btn btn-outline" style="padding:6px 12px;font-size:11px" onclick="downloadExcel()">⬇ Excel İndir</button>
+        <button class="btn btn-outline" style="padding:7px 14px;font-size:11px" onclick="downloadExcel()">⬇ Excel İndir</button>
       </div>
       <div class="panel-body">
         <div class="archive-wrap" id="archive-wrap">
@@ -410,16 +420,6 @@
   let BOT_URL = '';
   let API_SECRET = '';
   let refreshTimer = null;
-
-  // #region agent log
-  function dbgLog(location, message, data, hypothesisId) {
-    fetch('http://127.0.0.1:7342/ingest/cd08d7ac-240e-4b0c-8feb-dd8975579a4d', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'ba6a54' },
-      body: JSON.stringify({ sessionId: 'ba6a54', location, message, data, timestamp: Date.now(), hypothesisId })
-    }).catch(() => {});
-  }
-  // #endregion
 
   const DEFAULT_BOT_URL = 'https://spotibot-production-67bb.up.railway.app';
 
@@ -441,7 +441,6 @@
   }
 
   function loadConfig() {
-    // Eski çalışan davranış: varsayılan Railway URL + secret ile hemen bağlan
     BOT_URL = DEFAULT_BOT_URL;
     API_SECRET = 'said';
 
@@ -462,14 +461,6 @@
     document.getElementById('setup-banner').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
 
-    // #region agent log
-    dbgLog('index.html:loadConfig', 'config loaded', {
-      botHost: getBotUrlInfo(BOT_URL).host,
-      botUrl: BOT_URL,
-      pageOrigin: window.location.origin
-    }, 'A');
-    // #endregion
-
     fetchStatus();
     refreshTimer = setInterval(fetchStatus, 30000);
   }
@@ -487,10 +478,7 @@
     const secret = document.getElementById('api-secret').value.trim();
     if (!url || !secret) { alert('Her iki alanı da doldur.'); return; }
     const info = getBotUrlInfo(url);
-    if (!info.valid) {
-      alert('Geçersiz URL. Örnek: https://xxx.up.railway.app');
-      return;
-    }
+    if (!info.valid) { alert('Geçersiz URL. Örnek: https://xxx.up.railway.app'); return; }
     if (isLikelyFrontendUrl(url)) {
       alert('Bu Vercel (dashboard) adresi. Railway bot URL\'sini gir (örn: https://xxx.up.railway.app)');
       return;
@@ -515,39 +503,21 @@
   async function fetchStatus() {
     const dot = document.getElementById('status-dot');
     const statusText = document.getElementById('status-text');
-    // #region agent log
-    dbgLog('index.html:fetchStatus', 'request start', {
-      botHost: getBotUrlInfo(BOT_URL).host,
-      requestUrl: `${BOT_URL}/status`
-    }, 'B');
-    // #endregion
     try {
-      const res = await fetch(`${BOT_URL}/status`, {
-        headers: { 'X-API-Secret': API_SECRET }
-      });
+      const res = await fetch(`${BOT_URL}/status`, { headers: { 'X-API-Secret': API_SECRET } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      // #region agent log
-      dbgLog('index.html:fetchStatus', 'success', { cycle: data.cycle, httpStatus: res.status }, 'OK');
-      // #endregion
       renderStatus(data);
       dot.className = data.is_running ? 'status-dot running' : 'status-dot online';
       statusText.textContent = data.is_running ? 'Güncelleniyor...' : 'Çevrimiçi';
     } catch (e) {
       dot.className = 'status-dot';
       statusText.textContent = 'Bağlantı hatası';
-      // #region agent log
-      dbgLog('index.html:fetchStatus', 'request failed', {
-        errorMessage: e && e.message,
-        botHost: getBotUrlInfo(BOT_URL).host
-      }, 'D');
-      // #endregion
       console.error(e);
     }
   }
 
   function renderStatus(data) {
-    // Stats
     document.getElementById('stat-cycle').textContent = data.cycle || 0;
 
     if (data.last_update) {
@@ -556,7 +526,6 @@
       document.getElementById('stat-last-relative').textContent = timeAgo(d);
     }
 
-    // Son ruh hali
     const moods = data.mood_history || [];
     if (moods.length > 0) {
       const last = moods[moods.length - 1];
@@ -564,40 +533,56 @@
       document.getElementById('stat-energy').textContent = `Enerji: ${last.energy_level || '—'}`;
     }
 
-    // Son skor
     const feedbacks = data.feedback_history || [];
     if (feedbacks.length > 0) {
       const last = feedbacks[feedbacks.length - 1];
       document.getElementById('stat-score').textContent = last.score?.toFixed(1) || '—';
+      document.getElementById('stat-engagement').textContent =
+        (last.engagement_score !== undefined && last.engagement_score !== null)
+          ? last.engagement_score.toFixed(1) : '—';
     }
 
-    // Playlist linki
+    // Keşif istatistiği (arşivdeki son kayıttan)
+    const archive = data.playlist_archive_summary || [];
+    const lastA = archive[archive.length - 1] || {};
+    if (lastA.discovery_count !== undefined) {
+      document.getElementById('stat-discovery').textContent = lastA.discovery_count;
+      document.getElementById('stat-discovery-sub').textContent = 'yeni şarkı bu playlistte';
+    }
+
+    // Strateji paneli
+    const dyn = data.dynamic_config || {};
+    if (dyn.carry_over !== undefined) {
+      document.getElementById('strat-carry').textContent = dyn.carry_over;
+    }
+    document.getElementById('strat-discovery').textContent =
+      lastA.discovery_count !== undefined ? lastA.discovery_count : '—';
+    const cum = data.cumulative_plays;
+    document.getElementById('strat-plays').textContent =
+      cum ? Object.values(cum).reduce((a, b) => a + b, 0) : '—';
+    document.getElementById('strat-reason').textContent =
+      dyn.tune_reason ? `💬 Son ayar gerekçesi: ${dyn.tune_reason}` : '';
+
     if (data.playlist_id) {
       const link = document.getElementById('playlist-link');
       link.href = `https://open.spotify.com/playlist/${data.playlist_id}`;
       link.style.display = 'inline-flex';
     }
 
-    // Ruh hali geçmişi
     renderMoodHistory(moods.slice().reverse());
-
-    // Feedback geçmişi
     renderFeedbackHistory(feedbacks.slice().reverse());
 
-    // Adaptasyon
     const profile = data.user_profile || {};
     const metrics = profile.adaptation_metrics || {};
     const improvement = metrics.improvement_delta;
     const confidence = metrics.confidence;
     if (improvement !== undefined && data.cycle > 0) {
-      const sign = improvement >= 0 ? '+' : '';
-      document.getElementById('stat-adapt').textContent = `${sign}${improvement.toFixed(1)}`;
-      document.getElementById('stat-confidence').textContent = `Güven: %${Math.round((confidence || 0) * 100)}`;
-      document.getElementById('adapt-badge').textContent = `Güven %${Math.round((confidence || 0) * 100)}`;
+      document.getElementById('adapt-badge').textContent =
+        `Güven %${Math.round((confidence || 0) * 100)} · İyileşme ${improvement >= 0 ? '+' : ''}${improvement.toFixed(1)}`;
     }
 
     renderPatterns(profile.learned_patterns || [], profile.next_advice || '');
-    renderArchive(data.playlist_archive_summary || []);
+    renderArchive(archive);
     renderScoreChart(feedbacks);
   }
 
@@ -624,11 +609,13 @@
         <td>${formatDate(a.archived_at)}</td>
         <td>${a.mood || '—'}</td>
         <td>${a.score?.toFixed(1) || '—'}</td>
+        <td class="td-eng">${(a.engagement_score !== undefined && a.engagement_score !== null) ? a.engagement_score.toFixed(1) : '—'}</td>
+        <td class="td-disc">${a.discovery_count !== undefined ? a.discovery_count : '—'}</td>
         <td>${a.avg_plays?.toFixed(1) || 0}</td>
       </tr>
     `).join('');
     el.innerHTML = `<table class="archive-table">
-      <thead><tr><th>Döngü</th><th>Tarih</th><th>Ruh Hali</th><th>Skor</th><th>Ort. Çalma</th></tr></thead>
+      <thead><tr><th>Döngü</th><th>Tarih</th><th>Ruh Hali</th><th>AI</th><th>Gerçek</th><th>Keşif</th><th>Ort. Çalma</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
   }
@@ -636,27 +623,30 @@
   function renderScoreChart(feedbacks) {
     const panel = document.getElementById('score-trend-panel');
     const svg = document.getElementById('score-chart');
-    if (!feedbacks || feedbacks.length < 2) {
-      panel.hidden = true;
-      return;
-    }
+    if (!feedbacks || feedbacks.length < 2) { panel.hidden = true; return; }
     panel.hidden = false;
-    const scores = feedbacks.map(f => f.score).filter(s => s != null);
-    const w = 300, h = 60, pad = 10;
-    const min = Math.min(...scores) - 0.5;
-    const max = Math.max(...scores) + 0.5;
+
+    const w = 300, h = 70, pad = 10;
+    const aiVals = feedbacks.map(f => (f.score !== undefined ? f.score : null));
+    const engVals = feedbacks.map(f => (f.engagement_score !== undefined ? f.engagement_score : null));
+    const allVals = aiVals.concat(engVals).filter(s => s != null);
+    if (!allVals.length) { panel.hidden = true; return; }
+    const min = Math.min(...allVals) - 0.5;
+    const max = Math.max(...allVals) + 0.5;
     const range = max - min || 1;
-    const pts = scores.map((s, i) => {
-      const x = pad + (i / (scores.length - 1)) * (w - 2 * pad);
-      const y = h - pad - ((s - min) / range) * (h - 2 * pad);
-      return `${x},${y}`;
-    }).join(' ');
-    const circles = scores.map((s, i) => {
-      const x = pad + (i / (scores.length - 1)) * (w - 2 * pad);
-      const y = h - pad - ((s - min) / range) * (h - 2 * pad);
-      return `<circle cx="${x}" cy="${y}" r="3"/>`;
-    }).join('');
-    svg.innerHTML = `<polyline points="${pts}"/>${circles}`;
+    const n = feedbacks.length;
+    const xAt = i => pad + (i / Math.max(n - 1, 1)) * (w - 2 * pad);
+    const yAt = s => h - pad - ((s - min) / range) * (h - 2 * pad);
+
+    const line = (vals, color) => {
+      const pts = [];
+      vals.forEach((s, i) => { if (s != null) pts.push(`${xAt(i)},${yAt(s)}`); });
+      if (pts.length < 2) return '';
+      const dots = vals.map((s, i) => s != null ? `<circle cx="${xAt(i)}" cy="${yAt(s)}" r="3" fill="${color}"/>` : '').join('');
+      return `<polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2"/>${dots}`;
+    };
+
+    svg.innerHTML = line(aiVals, '#1DB954') + line(engVals, '#5aa7ff');
   }
 
   async function downloadExcel() {
@@ -682,17 +672,17 @@
       return;
     }
     el.innerHTML = moods.map(m => `
-      <div class="mood-item">
+      <div class="well">
         <div class="mood-top">
           <span class="mood-emoji">${m.mood_emoji || '🎵'}</span>
           <span class="mood-name">${m.mood || '—'}</span>
-          <span class="energy-badge ${m.energy_level || 'orta'}">${m.energy_level || 'orta'}</span>
+          <span class="chip ${m.energy_level === 'yüksek' ? 'green' : m.energy_level === 'düşük' ? 'blue' : 'yellow'}">${m.energy_level || 'orta'}</span>
           <span class="mood-date">${formatDate(m.date)} · ${m.trigger || 'Otomatik'}</span>
         </div>
         <div class="mood-summary">${m.summary || ''}</div>
         <div class="mood-tags">
-          ${(m.dominant_genres || []).map(g => `<span class="mood-tag">${g}</span>`).join('')}
-          ${(m.top_artists_this_period || []).map(a => `<span class="mood-tag green">${a}</span>`).join('')}
+          ${(m.dominant_genres || []).map(g => `<span class="chip">${g}</span>`).join('')}
+          ${(m.top_artists_this_period || []).map(a => `<span class="chip green">${a}</span>`).join('')}
         </div>
       </div>
     `).join('');
@@ -704,19 +694,28 @@
       el.innerHTML = `<div class="empty"><div class="empty-icon">📭</div>Henüz playlist geçmişi yok.<br>İlk güncelleme sonrası burada görünecek.</div>`;
       return;
     }
-    el.innerHTML = feedbacks.map(f => `
-      <div class="feedback-item">
+    el.innerHTML = feedbacks.map(f => {
+      const hasEng = f.engagement_score !== undefined && f.engagement_score !== null;
+      return `
+      <div class="well">
         <div class="feedback-top">
           <span class="cycle-badge">#${f.cycle}</span>
-          <div class="score-bar-wrap">
-            <div class="score-bar" style="width:${(f.score/10)*100}%"></div>
-          </div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:${(f.score/10)*100}%"></div></div>
           <span class="score-num">${f.score?.toFixed(1)}</span>
         </div>
+        ${hasEng ? `
+        <div class="feedback-top" style="margin-top:-2px">
+          <span class="chip blue" style="font-size:10px">gerçek</span>
+          <div class="score-bar-wrap"><div class="score-bar eng" style="width:${(f.engagement_score/10)*100}%"></div></div>
+          <span class="score-num blue">${f.engagement_score.toFixed(1)}</span>
+        </div>` : ''}
         <div class="feedback-analysis">${f.analysis || '—'}</div>
-        <div class="feedback-plays">Ort. çalma: ${f.avg_plays?.toFixed(1) || 0} · ${formatDate(f.date)}</div>
-      </div>
-    `).join('');
+        <div class="feedback-meta">
+          <span>Ort. çalma: ${f.avg_plays?.toFixed(1) || 0}</span>
+          <span>${formatDate(f.date)}</span>
+        </div>
+      </div>`;
+    }).join('');
   }
 
   async function triggerCycle() {
