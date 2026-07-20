@@ -417,11 +417,17 @@
 </div>
 
 <script>
-  let BOT_URL = '';
-  let API_SECRET = '';
   let refreshTimer = null;
 
-  const DEFAULT_BOT_URL = 'https://spotibot-production-67bb.up.railway.app';
+  // ── Gist yapılandırması ──────────────────────────────────────────────
+  // Bot state'i bu secret Gist'ten okunur (Railway sunucusu yok).
+  const GIST_ID = 'c7f3586cfc005a161864dcc3a624bd09';
+  const GIST_API = `https://api.github.com/gists/${GIST_ID}`;
+  const STATE_FILE = 'bot_state.json';
+
+  // Excel indirme ve "Şimdi Güncelle" butonları bot reposuna yönlendirir.
+  // bot.py'nin bulunduğu GitHub reposunun adresini buraya yaz:
+  const BOT_REPO_URL = ''; // örn: 'https://github.com/saidcim/spotibot'
 
   function normalizeBotUrl(raw) {
     if (!raw) return '';
@@ -441,28 +447,10 @@
   }
 
   function loadConfig() {
-    BOT_URL = DEFAULT_BOT_URL;
-    API_SECRET = 'said';
-
-    const savedUrl = localStorage.getItem('bot_url');
-    const savedSecret = localStorage.getItem('api_secret');
-    if (savedUrl) {
-      const info = getBotUrlInfo(savedUrl);
-      if (info.valid && info.host.includes('railway.app') && !isLikelyFrontendUrl(savedUrl)) {
-        BOT_URL = info.normalized;
-      } else {
-        localStorage.removeItem('bot_url');
-      }
-    }
-    if (savedSecret) API_SECRET = savedSecret;
-
-    document.getElementById('bot-url').value = BOT_URL;
-    document.getElementById('api-secret').value = API_SECRET;
     document.getElementById('setup-banner').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
-
     fetchStatus();
-    refreshTimer = setInterval(fetchStatus, 30000);
+    refreshTimer = setInterval(fetchStatus, 120000); // 2 dk'da bir yenile
   }
 
   function isLikelyFrontendUrl(url) {
@@ -473,43 +461,50 @@
     return false;
   }
 
+  // Artık Railway kurulumuna gerek yok; panel doğrudan Gist'ten okuyor.
   function saveConfig() {
-    const url = normalizeBotUrl(document.getElementById('bot-url').value);
-    const secret = document.getElementById('api-secret').value.trim();
-    if (!url || !secret) { alert('Her iki alanı da doldur.'); return; }
-    const info = getBotUrlInfo(url);
-    if (!info.valid) { alert('Geçersiz URL. Örnek: https://xxx.up.railway.app'); return; }
-    if (isLikelyFrontendUrl(url)) {
-      alert('Bu Vercel (dashboard) adresi. Railway bot URL\'sini gir (örn: https://xxx.up.railway.app)');
-      return;
+    loadConfig();
+  }
+
+  async function fetchState() {
+    const res = await fetch(GIST_API, {
+      headers: { 'Accept': 'application/vnd.github+json' },
+      cache: 'no-store'
+    });
+    if (!res.ok) throw new Error(`Gist HTTP ${res.status}`);
+    const gist = await res.json();
+    const file = gist.files && gist.files[STATE_FILE];
+    if (!file) throw new Error(`${STATE_FILE} Gist içinde bulunamadı`);
+    let content = file.content;
+    if (file.truncated && file.raw_url) {
+      const raw = await fetch(file.raw_url, { cache: 'no-store' });
+      if (!raw.ok) throw new Error('raw_url okunamadı');
+      content = await raw.text();
     }
-    if (!info.host.includes('railway.app')) {
-      alert('URL Railway adresi gibi görünmüyor. Örnek: https://xxx.up.railway.app');
-      return;
-    }
-    BOT_URL = info.normalized;
-    document.getElementById('bot-url').value = BOT_URL;
-    API_SECRET = secret;
-    localStorage.setItem('bot_url', BOT_URL);
-    localStorage.setItem('api_secret', secret);
-    document.getElementById('connect-msg').textContent = 'Bağlanıyor...';
-    document.getElementById('setup-banner').style.display = 'none';
-    document.getElementById('main-content').style.display = 'block';
-    fetchStatus();
-    if (refreshTimer) clearInterval(refreshTimer);
-    refreshTimer = setInterval(fetchStatus, 30000);
+    return JSON.parse(content);
   }
 
   async function fetchStatus() {
     const dot = document.getElementById('status-dot');
     const statusText = document.getElementById('status-text');
     try {
-      const res = await fetch(`${BOT_URL}/status`, { headers: { 'X-API-Secret': API_SECRET } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const state = await fetchState();
+      // Eski /status yanıtının şekline uyacak biçimde state'i haritala.
+      const data = {
+        cycle: state.cycle || 0,
+        last_update: state.last_update || null,
+        playlist_id: state.playlist_id || '',
+        is_running: false,
+        feedback_history: state.feedback_history || [],
+        mood_history: state.mood_history || [],
+        user_profile: state.user_profile || {},
+        dynamic_config: state.dynamic_config || {},
+        cumulative_plays: state.cumulative_plays || {},
+        playlist_archive_summary: state.playlist_archive || []
+      };
       renderStatus(data);
-      dot.className = data.is_running ? 'status-dot running' : 'status-dot online';
-      statusText.textContent = data.is_running ? 'Güncelleniyor...' : 'Çevrimiçi';
+      dot.className = 'status-dot online';
+      statusText.textContent = 'Çevrimiçi';
     } catch (e) {
       dot.className = 'status-dot';
       statusText.textContent = 'Bağlantı hatası';
@@ -649,20 +644,13 @@
     svg.innerHTML = line(aiVals, '#1DB954') + line(engVals, '#5aa7ff');
   }
 
-  async function downloadExcel() {
-    try {
-      const res = await fetch(`${BOT_URL}/history/excel?secret=${encodeURIComponent(API_SECRET)}`);
-      if (!res.ok) throw new Error('Excel bulunamadı');
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'playlist_history.xlsx';
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      alert('Excel indirilemedi: ' + e.message);
+  function downloadExcel() {
+    if (!BOT_REPO_URL) {
+      alert('Excel geçmişi artık bot reposunda tutuluyor. Panelde BOT_REPO_URL değerini ayarla.');
+      return;
     }
+    // Excel dosyaları her döngüde bot reposuna commit'leniyor.
+    window.open(BOT_REPO_URL, '_blank');
   }
 
   function renderMoodHistory(moods) {
@@ -718,39 +706,19 @@
     }).join('');
   }
 
-  async function triggerCycle() {
-    const btn = document.getElementById('trigger-btn');
+  function triggerCycle() {
     const result = document.getElementById('trigger-result');
-    btn.disabled = true;
-    btn.textContent = '⏳ Başlatılıyor...';
-    result.style.display = 'none';
-
-    try {
-      const res = await fetch(`${BOT_URL}/trigger`, {
-        method: 'POST',
-        headers: { 'X-API-Secret': API_SECRET }
-      });
-      const data = await res.json();
-      if (res.status === 409) {
-        result.className = 'trigger-result error';
-        result.textContent = '⚠️ Bot zaten çalışıyor, lütfen bekle.';
-      } else if (res.ok) {
-        result.className = 'trigger-result success';
-        result.textContent = '✅ Döngü başlatıldı! Birkaç dakika içinde playlist güncellenecek.';
-        setTimeout(fetchStatus, 5000);
-        setTimeout(fetchStatus, 15000);
-        setTimeout(fetchStatus, 30000);
-      } else {
-        throw new Error(data.message || 'Hata');
-      }
-    } catch (e) {
+    if (!BOT_REPO_URL) {
       result.className = 'trigger-result error';
-      result.textContent = `❌ Hata: ${e.message}`;
+      result.textContent = '⚠️ Manuel tetikleme için panelde BOT_REPO_URL değerini ayarla.';
+      result.style.display = 'block';
+      return;
     }
-
+    // GitHub Actions'ta cycle workflow'unu aç; oradan "Run workflow" ile başlat.
+    window.open(`${BOT_REPO_URL}/actions/workflows/cycle.yml`, '_blank');
+    result.className = 'trigger-result success';
+    result.textContent = 'ℹ️ GitHub Actions açıldı. "Run workflow" ile döngüyü elle başlatabilirsin.';
     result.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = '▶ Şimdi Güncelle';
   }
 
   function timeAgo(date) {
